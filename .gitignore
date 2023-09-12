@@ -1,4 +1,5 @@
 .vscode
+API_KEYS.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
