@@ -1,0 +1,12 @@
+pandas
+numpy
+pytest
+requests
+boto3
+botocore
+scrapingant-client
+fake-useragent
+tqdm
+asyncio
+aiohttp
+newspaper3k

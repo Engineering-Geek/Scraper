@@ -4,6 +4,7 @@ import logging
 from typing import List
 import pandas as pd
 import io
+import ast
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -157,6 +158,11 @@ class S3Bucket:
         try:
             raw_data = self.s3.get_object(Bucket=self.bucket_name, Key=remote_filepath)
             df = pd.read_csv(io.BytesIO(raw_data['Body'].read()))
+            for column in df.columns:
+                try:
+                    df[column] = df[column].apply(ast.literal_eval)
+                except (ValueError, SyntaxError):
+                    pass    # Ignore columns that can't be converted
             return df
         except botocore.exceptions.ClientError as e:
             self._handle_error(
@@ -201,3 +207,22 @@ class S3Bucket:
         except botocore.exceptions.ClientError as e:
             self.logger.error(f"Error deleting file '{file_name}' from {self.bucket_name}: {e}")
             return False
+        
+    def list_csv_files(self, s3_filepath: str) -> List[str]:
+        """
+        List all .csv files within the specified S3 filepath.
+
+        Args:
+            s3_filepath (str): The S3 filepath to search for .csv files.
+
+        Returns:
+            list: A list of .csv file names within the specified S3 filepath.
+        """
+        try:
+            objects = self.object_list()
+            csv_files = [obj['Key'] for obj in objects if obj['Key'].startswith(s3_filepath) and obj['Key'].endswith('.csv')]
+            return csv_files
+        except Exception as e:
+            self._handle_error(f"Error listing .csv files in S3 filepath '{s3_filepath}'", e)
+            return []
+
