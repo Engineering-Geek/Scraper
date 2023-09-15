@@ -203,7 +203,7 @@ class LinkScraper(ABC):
         """
         dates = [start + timedelta(n) for n in range((end - start).days + 1)]
         rows = []
-        for day in tqdm(dates):
+        for day in tqdm(dates, f"{query} - start: {start} - end: {end}"):
             try:
                 result_contents = self.raw_data(query, day, day)
                 links = [link for sublist in result_contents for link in sublist]
@@ -237,7 +237,8 @@ class LinkScraper(ABC):
 
 
 class GoogleNewsLinkScraper(LinkScraper):
-    def __init__(self, bucket_name: str, console_level=logging.ERROR, file_log_level=logging.INFO, log_filepath: str = "scraper.log"):
+    def __init__(self, bucket_name: str, console_level=logging.ERROR, file_log_level=logging.INFO, log_filepath: str = "scraper.log",
+                 min_sleep: int = 1, max_sleep: int = 3):
         """
         Initialize a GoogleNewsLinkScraper instance. Running the start method will also upload the dataframe to the
             AWS S3 bucket.
@@ -271,7 +272,7 @@ class GoogleNewsLinkScraper(LinkScraper):
         """
         super().__init__(bucket_name, log_name=self.__class__.__name__,
                          console_log_level=console_level, file_log_level=file_log_level, 
-                         log_filepath=log_filepath)
+                         log_filepath=log_filepath, min_sleep=min_sleep, max_sleep=max_sleep)
 
     def _url(self, query: str, start_date: date, end_date: date, page_num: int) -> str:
         """
