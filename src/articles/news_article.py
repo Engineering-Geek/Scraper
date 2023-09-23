@@ -1,11 +1,15 @@
 import logging
 from datetime import date
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Any
 
-from newspaper import Article
+from newspaper import Article, Config
 import tldextract
+from fake_useragent import UserAgent
 
-from src.query import Query
+from src.articles.query import Query
+
+
+TIMEOUT = 10
 
 
 class NewsArticle:
@@ -40,7 +44,10 @@ class NewsArticle:
         self.domain = tldextract.extract(url).domain
         self.query = query
 
-        self.article = Article(url)
+        config = Config()
+        config.browser_user_agent = UserAgent().random
+        config.request_timeout = 10
+        self.article = Article(url, config=config)
 
         self.title: str = ""
         self.text: str = ""
@@ -66,7 +73,7 @@ class NewsArticle:
             self.downloaded = True
             return True
         except Exception as e:
-            logging.warning(f'Error downloading {self.url}: {str(e)}')
+            logging.info(f'Error downloading {self.url}: {str(e)}')
             return False
 
     def parse(self) -> bool:
@@ -89,7 +96,7 @@ class NewsArticle:
             self.parsed = True
             return True
         except Exception as e:
-            logging.warning(f'Error parsing {self.url}: {str(e)}')
+            logging.info(f'Error parsing {self.url}: {str(e)}')
             return False
 
     def nlp(self) -> bool:
@@ -109,7 +116,7 @@ class NewsArticle:
             self.nlp_applied = True
             return True
         except Exception as e:
-            logging.warning(f'Error Applying NLP to {self.url}: {str(e)}')
+            logging.info(f'Error Applying NLP to {self.url}: {str(e)}')
             return False
 
     def metadata(self) -> Union[Dict[str, Any]]:

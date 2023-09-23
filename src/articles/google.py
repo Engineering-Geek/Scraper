@@ -7,8 +7,8 @@ from tqdm import tqdm
 from bs4 import BeautifulSoup
 import requests
 
-from src.query import Query
-from src.news_article import NewsArticle
+from src.articles.query import Query
+from src.articles.news_article import NewsArticle
 
 
 class GoogleNewsLinkScraper:
@@ -101,7 +101,7 @@ class GoogleNewsLinkScraper:
         try:
             # Check the response status code
             if response.status_code != 200:
-                logging.warning(f"Response status code is {response.status_code}")
+                logging.info(f"Response status code is {response.status_code}")
                 return []
 
             # Fetch and parse HTML content

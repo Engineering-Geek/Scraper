@@ -1,0 +1,7 @@
+{
+  "test bucket": "test-debug-nm",
+  "production bucket": "",
+  "s3 root dir": "",
+  "delay": 0.0,
+  "max batch": 20
+}

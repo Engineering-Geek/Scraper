@@ -1,0 +1,12 @@
+{
+  "currency pair": "eurusd",
+  "search terms": [
+      "US",
+      "Europe",
+      "us stocks",
+      "europe stocks"
+    ],
+  "start year, month, day": [2023, 9, 20],
+  "end year, month, day": null,
+  "number of pages": 1
+}

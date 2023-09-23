@@ -1,6 +1,6 @@
 from datetime import date
-from src.query import Query
-from src.news_article import NewsArticle
+from articles.query import Query
+from articles.news_article import NewsArticle
 
 
 def test_download():

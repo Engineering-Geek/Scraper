@@ -1,4 +1,4 @@
-pandas~=2.1.0
+pandas~=2.0.3
 pytest~=7.4.2
 requests~=2.31.0
 boto3~=1.28.49
@@ -9,3 +9,6 @@ asyncio~=3.4.3
 newspaper3k
 beautifulsoup4~=4.12.2
 tldextract~=3.5.0
+MetaTrader5~=5.0.45
+numpy~=1.24.4
+setuptools~=65.5.0

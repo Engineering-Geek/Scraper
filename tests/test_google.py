@@ -1,9 +1,7 @@
-import logging
 from datetime import date
-from typing import List
-from src.query import Query
-from src.news_article import NewsArticle
-from src.google import GoogleNewsLinkScraper
+from articles.query import Query
+from articles.news_article import NewsArticle
+from articles.google import GoogleNewsLinkScraper
 
 
 def test_google_news_link_scraper():

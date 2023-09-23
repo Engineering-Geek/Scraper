@@ -5,11 +5,11 @@ from typing import List
 
 import pandas as pd
 
-from src.news_article import NewsArticle
-from src.S3 import S3Bucket
+from src.articles.news_article import NewsArticle
+from src.articles.S3 import S3Bucket
 
 try:
-    from tqdm.notebook import tqdm
+    from tqdm.auto import tqdm
 except ImportError:
     from tqdm import tqdm
 
@@ -17,8 +17,8 @@ except ImportError:
 def _batchify(articles: List[NewsArticle], max_batch: int = None) -> List[List[NewsArticle]]:
     """
     Batchify a list of news articles into smaller batches based on a maximum batch size
-    while ensuring that articles from different domain are grouped together. This makes asynchronous
-    scraping less likely to overwhelm any site
+    while ensuring that articles from different domains are grouped together. This makes asynchronous
+    scraping less likely to overwhelm any site.
 
     Args:
         articles (List[NewsArticle]): A list of NewsArticle objects to be batched.
@@ -43,7 +43,7 @@ def _batchify(articles: List[NewsArticle], max_batch: int = None) -> List[List[N
     batches = []
     current_batch = []
     batching_done = False
-    dynamic = bool(max_batch)
+    dynamic = not bool(max_batch)
 
     while not batching_done:
         hashtable_temp = hashtable.copy()
@@ -53,17 +53,17 @@ def _batchify(articles: List[NewsArticle], max_batch: int = None) -> List[List[N
             # Add articles to the current batch
             current_batch.append(hashtable[domain][0])
 
+            # Remove the article from the dictionary
+            hashtable_temp[domain].pop(0)
+            # If the domain is empty, remove it from the dictionary
+            if len(hashtable_temp[domain]) == 0:
+                del hashtable_temp[domain]
+
             # Check if the batch is full
             if len(current_batch) >= max_batch:
                 batches.append(current_batch)
                 current_batch = []
                 break
-
-            # remove the article from the dictionary
-            hashtable_temp[domain].pop(0)
-            # if the domain is empty, remove it from the dictionary
-            if len(hashtable_temp[domain]) == 0:
-                del hashtable_temp[domain]
         hashtable = hashtable_temp
         if len(hashtable.keys()) == 0:
             batches.append(current_batch)
@@ -84,7 +84,7 @@ async def _scrape_batch(batch: List[NewsArticle]) -> List[dict]:
     """
     metadata_list = []
 
-    # asynchronously download
+    # Asynchronously download articles
     async def download_article(article: NewsArticle):
         if not article.downloaded:
             success = article.download()
@@ -93,7 +93,7 @@ async def _scrape_batch(batch: List[NewsArticle]) -> List[dict]:
 
     await asyncio.gather(*[download_article(article) for article in batch])
 
-    # asynchronously parse
+    # Asynchronously parse articles
     async def parse_article(article: NewsArticle):
         if not article.parsed:
             success = article.parse()
@@ -102,7 +102,7 @@ async def _scrape_batch(batch: List[NewsArticle]) -> List[dict]:
 
     await asyncio.gather(*[parse_article(article) for article in batch])
 
-    # asynchronously apply nlp
+    # Asynchronously apply NLP to articles
     async def apply_nlp_article(article: NewsArticle):
         if not article.nlp_applied:
             success = article.nlp()
@@ -117,8 +117,8 @@ async def _scrape_batch(batch: List[NewsArticle]) -> List[dict]:
     return metadata_list
 
 
-async def scrape(articles: List[NewsArticle], max_batch: int = None, delay: float = 0.0, save_path: str = None,
-                 s3_path: str = None, s3_name: str = None) -> pd.DataFrame:
+async def article_scraper(articles: List[NewsArticle], max_batch: int = None, delay: float = 0.0,
+                          save_path: str = None, s3_path: str = None, s3_name: str = None) -> pd.DataFrame:
     """
     Batchify a list of news articles into smaller batches and scrape them asynchronously.
 
@@ -126,13 +126,14 @@ async def scrape(articles: List[NewsArticle], max_batch: int = None, delay: floa
         articles (List[NewsArticle]): A list of NewsArticle objects to be batched and scraped.
         max_batch (int): The maximum size of each batch.
         delay (float): The number of seconds to wait between batches.
-        save_path (str): The path to save the pandas dataframe to
-        s3_path (str): The path to save the pandas dataframe to in the s3 bucket
-        s3_name (str): The name of the s3 bucket
+        save_path (str): The path to save the pandas dataframe to.
+        s3_path (str): The path to save the pandas dataframe to in the S3 bucket.
+        s3_name (str): The name of the S3 bucket.
 
     Returns:
         pd.DataFrame: A dataframe containing metadata dictionaries for the scraped articles.
     """
+
     batches = _batchify(articles, max_batch)
 
     # Create a list to store the results of each batch
@@ -142,8 +143,10 @@ async def scrape(articles: List[NewsArticle], max_batch: int = None, delay: floa
         results.extend(await asyncio.gather(*[_scrape_batch(batch)]))
         await asyncio.sleep(delay)
     results = [item for sublist in results for item in sublist]
-    df = pd.DataFrame(results)
+    df = pd.DataFrame(results).dropna(axis="rows")
     logging.info(f"Total number of articles: {len(df)}")
+
+    logging.debug(f"Scraping ForEx data")
 
     if save_path:
         df.to_csv(save_path)
