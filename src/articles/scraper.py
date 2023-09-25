@@ -6,12 +6,7 @@ from typing import List
 import pandas as pd
 
 from src.articles.news_article import NewsArticle
-from src.articles.S3 import S3Bucket
-
-try:
-    from tqdm.auto import tqdm
-except ImportError:
-    from tqdm import tqdm
+from src.utils.S3 import S3Bucket
 
 
 def _batchify(articles: List[NewsArticle], max_batch: int = None) -> List[List[NewsArticle]]:
@@ -139,7 +134,7 @@ async def article_scraper(articles: List[NewsArticle], max_batch: int = None, de
     # Create a list to store the results of each batch
     results = []
 
-    for batch in tqdm(batches, "Iterating through article batches"):
+    for batch in batches:
         results.extend(await asyncio.gather(*[_scrape_batch(batch)]))
         await asyncio.sleep(delay)
     results = [item for sublist in results for item in sublist]

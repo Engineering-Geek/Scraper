@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import numpy as np
 
-from articles.S3 import S3Bucket
+from utils.S3 import S3Bucket
 
 # Use a dedicated test bucket for testing
 TEST_BUCKET = 'test-debug-nm'

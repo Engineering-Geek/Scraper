@@ -30,8 +30,6 @@ class S3Bucket:
         self.bucket_name = bucket_name
         self.s3 = boto3.client('s3')
         self.s3_resource = boto3.resource('s3')
-        if not self.bucket_exists():
-            raise ValueError(f"The specified bucket '{bucket_name}' does not exist.")
 
     def bucket_exists(self):
         """

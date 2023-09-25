@@ -2,7 +2,6 @@ import logging
 from datetime import date
 from typing import List
 from fake_useragent import FakeUserAgent
-from tqdm import tqdm
 
 from bs4 import BeautifulSoup
 import requests
@@ -14,10 +13,10 @@ from src.articles.news_article import NewsArticle
 class GoogleNewsLinkScraper:
     def __init__(self):
         self.user_agent = FakeUserAgent()
-        logging.info(f'GoogleNewsLinkScraper initialized')
+        logging.info('GoogleNewsLinkScraper initialized')
 
     @staticmethod
-    def _google_news_url(query: str, query_date: date, page_num: int) -> str:
+    def _generate_google_news_url(query: str, query_date: date, page_num: int) -> str:
         """
         Generates a Google News search URL.
 
@@ -44,13 +43,36 @@ class GoogleNewsLinkScraper:
         url = f'{base_url}{query}{date_param}{news_param}{start_param}'
         return url
 
+    def _extract_links_from_page(self, google_url: str) -> List[str]:
+        try:
+            response = requests.get(google_url, headers={'User-Agent': self.user_agent.random})
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Error while fetching data: {e}")
+            return []
+
+        try:
+            if response.status_code != 200:
+                logging.error(f"Response status code is {response.status_code}")
+                return []
+
+            html_content = response.text
+            soup = BeautifulSoup(html_content, 'html.parser')
+            link_classes = soup.find_all('a', class_='WlydOe')
+            links = [link['href'] for link in link_classes]
+            return links
+        except Exception as e:
+            logging.error(f"Error while parsing the content: {e}")
+            return []
+
     def _get_news_articles(self, queries: List[Query], pages: int) -> List[NewsArticle]:
         articles = []
-        for query in tqdm(queries, "Queries to iterate through"):
+        for query in queries:
             q = query.query
-            for q_date in tqdm(query.dates, f"Query: {q} --> {query.start} - {query.end}"):
+            for q_date in query.dates:
                 for page in range(1, pages + 1):
-                    news_urls = self._get_links(self._google_news_url(q, q_date, page))
+                    google_url = self._generate_google_news_url(q, q_date, page)
+                    news_urls = self._extract_links_from_page(google_url)
                     for news_url in news_urls:
                         articles.append(NewsArticle(query, news_url))
                         logging.info(f'Scraped Google News for query {q} on page {page}: {news_url}')

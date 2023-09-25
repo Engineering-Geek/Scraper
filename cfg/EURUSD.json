@@ -1,12 +1,21 @@
 {
-  "currency pair": "eurusd",
+  "currency pair": "EURUSD",
   "search terms": [
       "US",
       "Europe",
       "us stocks",
-      "europe stocks"
-    ],
-  "start year, month, day": [2023, 9, 20],
-  "end year, month, day": null,
-  "number of pages": 1
+      "europe stocks",
+      "EU budget",
+      "US Federal Budget",
+      "US Exports",
+      "US Imports",
+      "EU Exports",
+      "EU Imports",
+      "US EU Trade",
+      "US Spending",
+      "EU Spending"
+  ],
+  "start year, month, day": [2022, 1, 1],
+  "end year, month, day": [2023, 9, 22],
+  "number of pages": 5
 }
